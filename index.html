@@ -675,6 +675,8 @@ body:not(.cloud-ready) .app{visibility:hidden}
 .auth-fields{display:grid;gap:11px}.auth-fields label{display:grid;gap:5px;color:#456481;font-size:12px}.auth-fields input{width:100%;border:1px solid #cfdfef;border-radius:9px;padding:10px 12px;outline:0}.auth-fields input:focus{border-color:#4a80b8;box-shadow:0 0 0 3px #e5f0fb}
 .auth-submit{width:100%;margin-top:17px;padding:11px}.auth-message{min-height:20px;font-size:11px;color:#9c4051;margin:10px 0 0;line-height:1.5}.auth-message.ok{color:#286785}
 .cloud-strip{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 22px 12px;color:#6984a1;font-size:11px}.cloud-strip button{border:0;background:transparent;color:#285b96;cursor:pointer}.cloud-strip button:hover{text-decoration:underline}
+.admin-card{width:min(620px,100%);background:#fff;border:1px solid #c9def2;border-radius:16px;padding:22px;max-height:85vh;overflow:auto;box-shadow:0 22px 64px rgba(25,66,110,.17)}
+.admin-card h2{margin:0 0 8px;color:#173a61;font-size:20px}.admin-card p{font-size:12px;color:#6984a1;line-height:1.6}.admin-actions{display:flex;gap:8px;margin:14px 0}.admin-list{display:grid;gap:7px}.admin-person{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #d7e4f2;border-radius:9px;padding:9px 11px}.admin-person small{display:block;color:#718ca9;margin-top:3px}.admin-code{width:100%;border:1px solid #b9d2eb;border-radius:8px;padding:9px;font-family:monospace;font-size:12px}.admin-message{min-height:18px;font-size:11px;color:#285b96}
 @media(max-width:650px){.cloud-strip{padding:4px 12px 11px}}
 </style>
 </head>
@@ -686,12 +688,23 @@ body:not(.cloud-ready) .app{visibility:hidden}
     <div class="auth-tabs"><button type="button" class="active" data-auth-tab="login">登录</button><button type="button" data-auth-tab="register">注册</button></div>
     <form id="authForm" class="auth-fields">
       <label>邮箱<input id="authEmail" type="email" autocomplete="email" required placeholder="你的邮箱"></label>
+      <label id="authUsernameField" class="hidden">用户名<input id="authUsername" maxlength="24" autocomplete="username" placeholder="3–24 位字母、数字或下划线"></label>
       <label>密码<input id="authPassword" type="password" minlength="8" autocomplete="current-password" required placeholder="至少 8 位"></label>
       <label id="authConfirmField" class="hidden">确认密码<input id="authConfirm" type="password" autocomplete="new-password" placeholder="再次输入密码"></label>
       <label id="authInviteField" class="hidden">邀请码<input id="authInvite" autocomplete="off" placeholder="仅注册或加入账号时需要"></label>
       <button class="primary-btn auth-submit" id="authSubmit" type="submit">登录</button>
     </form>
     <p id="authMessage" class="auth-message" role="status"></p>
+  </div>
+</div>
+<div class="auth-gate hidden" id="adminGate">
+  <div class="admin-card">
+    <h2>日子 · 管理员</h2>
+    <p>管理已加入日子的账号与一次性邀请码。移除账号会删除其日子日历数据及使用权限；同一 Supabase 项目中的其他应用账号保留。</p>
+    <div class="admin-actions"><button class="primary-btn" type="button" id="adminCreateInvite">生成一次性邀请码</button><button class="ghost-btn" type="button" id="adminClose">关闭</button></div>
+    <div id="adminCodeArea" class="hidden"><input id="adminCode" class="admin-code" readonly aria-label="新邀请码"><button class="ghost-btn" type="button" id="adminCopyCode">复制</button><p>邀请码只显示在这里一次，请立即保存。</p></div>
+    <p id="adminMessage" class="admin-message" role="status"></p>
+    <div id="adminList" class="admin-list"></div>
   </div>
 </div>
 <div class="app">
@@ -785,7 +798,7 @@ body:not(.cloud-ready) .app{visibility:hidden}
         </div>
       </div>
 
-      <div class="cloud-strip"><span id="cloudStatus">正在连接云端…</span><span><button id="cloudRefreshBtn" type="button">读取云端</button><button id="cloudLogoutBtn" type="button">退出登录</button></span></div>
+      <div class="cloud-strip"><span id="cloudStatus">正在连接云端…</span><span><button id="adminOpen" class="hidden" type="button">管理员</button><button id="cloudRefreshBtn" type="button">读取云端</button><button id="cloudLogoutBtn" type="button">退出登录</button></span></div>
       <div class="ddl-pulse" aria-label="截止日期概览">
         <div class="pulse-card"><span>已逾期</span><strong id="pulseOverdue">0</strong></div>
         <div class="pulse-card"><span>未来 7 天</span><strong id="pulseSoon">0</strong></div>
