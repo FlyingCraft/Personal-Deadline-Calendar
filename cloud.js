@@ -247,11 +247,17 @@ async function pdAdmin(action, fields = {}) {
 }
 async function pdAdminList() {
   const list = document.getElementById('adminList');
+  const choices = document.getElementById('adminPasswordUser');
   list.textContent = '正在读取账号…';
   try {
     const data = await pdAdmin('list');
     list.replaceChildren();
+    choices.replaceChildren();
     for (const member of data.members) {
+      const option = document.createElement('option');
+      option.value = member.user_id;
+      option.textContent = member.username + (member.is_admin ? '（管理员）' : '');
+      choices.append(option);
       const row = document.createElement('div');
       row.className = 'admin-person';
       const info = document.createElement('div');
@@ -287,6 +293,27 @@ document.getElementById('adminOpen').onclick = () => {
 document.getElementById('adminClose').onclick = () => {
   pdAdminGate.classList.add('hidden');
   document.getElementById('adminCode').value = '';
+  document.getElementById('adminPasswordForm').reset();
+};
+document.getElementById('adminPasswordForm').onsubmit = async event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const button = document.getElementById('adminPasswordSubmit');
+  const userId = document.getElementById('adminPasswordUser').value;
+  const password = document.getElementById('adminNewPassword').value;
+  if (password !== document.getElementById('adminConfirmPassword').value) {
+    pdAdminMessage.textContent = '两次输入的密码不一致';
+    return;
+  }
+  const username = document.getElementById('adminPasswordUser').selectedOptions[0]?.textContent;
+  if (!userId || !confirm(`确定修改“${username}”的登录密码？`)) return;
+  button.disabled = true;
+  try {
+    await pdAdmin('change_password', { userId, password });
+    pdAdminMessage.textContent = '密码修改成功，请使用新密码登录';
+    form.reset();
+  } catch (error) { pdAdminMessage.textContent = error.message; }
+  finally { button.disabled = false; }
 };
 document.getElementById('adminCreateInvite').onclick = async () => {
   const button = document.getElementById('adminCreateInvite');
