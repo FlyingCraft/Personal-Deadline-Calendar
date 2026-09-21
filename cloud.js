@@ -1,4 +1,3 @@
-/* Personal Deadline cloud access. The only key in this public file is publishable. */
 const PD_URL = 'https://czydcsdgoiwivwpnggiq.supabase.co';
 const PD_KEY = 'sb_publishable_YYkORrCLJzGuWOaAqLX0uQ_VimButZj';
 const PD_SESSION_KEY = 'pd_cloud_session_v1';
@@ -166,6 +165,9 @@ function pdSchedule() {
   clearTimeout(pdTimer);
   pdTimer = setTimeout(pdPush, 700);
 }
+window.addEventListener('online', () => {
+  if (pdReady && localStorage.getItem(PD_PENDING_KEY) === '1') pdPush();
+});
 // Keep the existing local save and import behavior, then sync changes.
 const pdLocalSave = save;
 save = function () { pdLocalSave(); pdSchedule(); };
