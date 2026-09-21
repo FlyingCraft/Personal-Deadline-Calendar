@@ -48,49 +48,43 @@ function pdSetMode(mode) {
   pdMode = mode;
   document.querySelectorAll('[data-auth-tab]').forEach(b => b.classList.toggle('active', b.dataset.authTab === mode));
   document.getElementById('authConfirmField').classList.toggle('hidden', mode !== 'register');
-  document.getElementById('authUsernameField').classList.toggle('hidden', mode !== 'register');
   document.getElementById('authInviteField').classList.toggle('hidden', mode !== 'register');
   document.getElementById('authConfirm').required = mode === 'register';
-  document.getElementById('authUsername').required = mode === 'register';
   document.getElementById('authInvite').required = mode === 'register';
   document.getElementById('authPassword').autocomplete = mode === 'register' ? 'new-password' : 'current-password';
   document.getElementById('authSubmit').textContent = mode === 'register' ? '使用邀请码注册' : '登录';
   pdMessage('');
 }
 document.querySelectorAll('[data-auth-tab]').forEach(b => b.onclick = () => pdSetMode(b.dataset.authTab));
-async function pdRegister(email, password, invite, username) {
+function pdInternalEmail(username) {
+  return username.trim().toLowerCase() + '@personal-deadline.local';
+}
+async function pdRegister(username, password, invite) {
   const response = await fetch(PD_URL + '/functions/v1/personal-deadline-register', {
-    method: 'POST', headers: pdHeaders(null), body: JSON.stringify({ action: 'register', email, password, invite, username }),
+    method: 'POST', headers: pdHeaders(null), body: JSON.stringify({ action: 'register', password, invite, username }),
   });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || '注册失败');
 }
-async function pdJoin(invite, username) {
-  const response = await fetch(PD_URL + '/functions/v1/personal-deadline-register', {
-    method: 'POST', headers: pdHeaders(), body: JSON.stringify({ action: 'join', invite, username }),
-  });
-  const result = await response.json();
-  if (!response.ok) throw new Error(result.error || '加入失败');
-}
-async function pdSignIn(email, password) {
+async function pdSignIn(username, password) {
   pdSetSession(await pdRequest('/auth/v1/token?grant_type=password', {
-    method: 'POST', body: JSON.stringify({ email, password }),
+    method: 'POST', body: JSON.stringify({ email: pdInternalEmail(username), password }),
   }));
   await pdOpenCalendar();
 }
 document.getElementById('authForm').onsubmit = async e => {
   e.preventDefault();
   const button = document.getElementById('authSubmit');
-  const email = document.getElementById('authEmail').value.trim();
+  const username = document.getElementById('authUsername').value.trim();
   const password = document.getElementById('authPassword').value;
   button.disabled = true;
   pdMessage(pdMode === 'register' ? '正在注册…' : '正在登录…', true);
   try {
     if (pdMode === 'register') {
       if (password !== document.getElementById('authConfirm').value) throw new Error('两次密码不一致');
-      await pdRegister(email, password, document.getElementById('authInvite').value.trim(), document.getElementById('authUsername').value.trim());
+      await pdRegister(username, password, document.getElementById('authInvite').value.trim());
     }
-    await pdSignIn(email, password);
+    await pdSignIn(username, password);
   } catch (error) { pdMessage(error.message || '操作失败'); }
   finally { button.disabled = false; }
 };
@@ -211,16 +205,8 @@ async function pdLoadOnLogin() {
 async function pdOpenCalendar() {
   await pdEnsureSession();
   pdUser = await pdAuthRequest('/auth/v1/user');
-  let membership = await pdMemberCheck();
-  if (!membership) {
-    const invite = prompt('该账号尚未加入“日子”。请输入邀请码：');
-    if (!invite) throw new Error('需要邀请码才能使用此日历');
-    const username = prompt('设置你的日子用户名（3–24 位字母、数字或下划线）：');
-    if (!username) throw new Error('需要用户名才能加入');
-    await pdJoin(invite.trim(), username.trim());
-    membership = await pdMemberCheck();
-    if (!membership) throw new Error('加入失败，请重试');
-  }
+  const membership = await pdMemberCheck();
+  if (!membership) throw new Error('该账号没有日历权限，请使用邀请码注册');
   await pdLoadOnLogin();
   document.getElementById('adminOpen').classList.toggle('hidden', !membership.is_admin);
   document.body.classList.add('cloud-ready');
@@ -272,7 +258,7 @@ async function pdAdminList() {
       const title = document.createElement('strong');
       title.textContent = member.username || '未设置用户名';
       const detail = document.createElement('small');
-      detail.textContent = member.email || member.user_id;
+      detail.textContent = (member.is_admin ? '管理员' : '成员') + ' · ' + new Date(member.joined_at).toLocaleDateString('zh-CN');
       info.append(title, detail);
       row.append(info);
       if (!member.is_admin) {
