@@ -1,4 +1,12 @@
-# 日子 · Personal Deadline Calendar
+# Personal-Deadline-Calendar
+
+All by ChatGPT
+
+An invitation code is necessary to create an account and enable cloud storage of personal data.
+
+If U need it, U can contact me.
+
+## 日子 · 使用与部署
 
 静态页面部署在 GitHub Pages，登录及数据存储使用 Supabase。
 
