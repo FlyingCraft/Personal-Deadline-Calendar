@@ -57,7 +57,9 @@ function pdSetMode(mode) {
 }
 document.querySelectorAll('[data-auth-tab]').forEach(b => b.onclick = () => pdSetMode(b.dataset.authTab));
 function pdInternalEmail(username) {
-  return username.trim().toLowerCase() + '@personal-deadline.local';
+  const hex = [...new TextEncoder().encode(username.trim().toLowerCase())]
+    .map(byte => byte.toString(16).padStart(2, '0')).join('');
+  return `u${hex}@accounts.example.com`;
 }
 async function pdRegister(username, password, invite) {
   const response = await fetch(PD_URL + '/functions/v1/personal-deadline-register', {
