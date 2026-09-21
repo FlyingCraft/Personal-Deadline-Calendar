@@ -180,7 +180,7 @@ async function pdLoadOnLogin() {
   const remote = await pdFetchCalendar();
   if (remote) {
     pdRevision = Number(remote.revision);
-    if (unsynced && confirm('本机有尚未上传的更改。\n\n确定：用本机数据覆盖云端。\n取消：读取云端版本。')) {
+    if ((unsynced || localHadData) && confirm('本机有尚未上传的个人日历数据。\n\n确定：用本机数据覆盖云端。\n取消：读取云端版本。')) {
       localStorage.setItem(PD_OWNER_KEY, pdUser.id);
       pdReady = true;
       pdSchedule();
