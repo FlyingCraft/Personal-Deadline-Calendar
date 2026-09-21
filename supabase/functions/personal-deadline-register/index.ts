@@ -40,7 +40,7 @@ Deno.serve(async req => {
   const email = `u${hex}@accounts.example.com`;
   const response = await fetch(`${url}/auth/v1/admin/users`, {
     method: 'POST', headers: svc,
-    body: JSON.stringify({ email, password, email_confirm: true }),
+    body: JSON.stringify({ email, password, email_confirm: true, app_metadata: { personal_deadline_account: true } }),
   });
   const result = await response.json();
   if (!response.ok) return reply({ error: result.msg || result.message || '注册失败；用户名可能已存在' }, 400);
