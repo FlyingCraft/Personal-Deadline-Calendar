@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>日子 · 个人 DDL 日历 v1.0</title>
+<title>日子 · 个人 DDL 日历 v1.1</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2216%22%20fill%3D%22%23234a78%22/%3E%3Ctext%20x%3D%2232%22%20y%3D%2244%22%20text-anchor%3D%22middle%22%20font-size%3D%2238%22%20font-family%3D%22serif%22%20font-weight%3D%22700%22%20fill%3D%22white%22%3E%E6%97%A5%3C/text%3E%3C/svg%3E">
 
 <style>
@@ -677,13 +677,14 @@ body:not(.cloud-ready) .app{visibility:hidden}
 .cloud-strip{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 22px 12px;color:#6984a1;font-size:11px}.cloud-strip button{border:0;background:transparent;color:#285b96;cursor:pointer}.cloud-strip button:hover{text-decoration:underline}
 .admin-card{width:min(620px,100%);background:#fff;border:1px solid #c9def2;border-radius:16px;padding:22px;max-height:85vh;overflow:auto;box-shadow:0 22px 64px rgba(25,66,110,.17)}
 .admin-card h2{margin:0 0 8px;color:#173a61;font-size:20px}.admin-card p{font-size:12px;color:#6984a1;line-height:1.6}.admin-actions{display:flex;gap:8px;margin:14px 0}.admin-list{display:grid;gap:7px}.admin-person{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid #d7e4f2;border-radius:9px;padding:9px 11px}.admin-person small{display:block;color:#718ca9;margin-top:3px}.admin-code{width:100%;border:1px solid #b9d2eb;border-radius:8px;padding:9px;font-family:monospace;font-size:12px}.admin-message{min-height:18px;font-size:11px;color:#285b96}
+.version-tag{margin-left:auto;color:#52769d;background:#edf5fd;border-radius:999px;padding:3px 8px;font-size:11px;font-weight:700}.admin-password{display:grid;gap:8px;margin:15px 0;padding:14px;border:1px solid #d7e4f2;border-radius:10px}.admin-password label{display:grid;gap:5px;font-size:12px;color:#456481}.admin-password input,.admin-password select{width:100%;border:1px solid #cfdfef;border-radius:8px;padding:9px}.admin-password .primary-btn{justify-self:start}
 @media(max-width:650px){.cloud-strip{padding:4px 12px 11px}}
 </style>
 </head>
 <body>
 <div class="auth-gate" id="authGate">
   <div class="auth-card">
-    <div class="auth-brand"><div class="auth-mark">日</div><strong>日子</strong></div>
+    <div class="auth-brand"><div class="auth-mark">日</div><strong>日子</strong><span class="version-tag">v1.1</span></div>
     <p class="auth-hint">登录后可在不同设备查看和编辑同一份个人日历。新账号需要邀请码。</p>
     <div class="auth-tabs"><button type="button" class="active" data-auth-tab="login">登录</button><button type="button" data-auth-tab="register">注册</button></div>
     <form id="authForm" class="auth-fields">
@@ -702,6 +703,7 @@ body:not(.cloud-ready) .app{visibility:hidden}
     <p>管理已加入日子的账号与一次性邀请码。移除账号会删除其日子日历数据及使用权限；同一 Supabase 项目中的其他应用账号保留。</p>
     <div class="admin-actions"><button class="primary-btn" type="button" id="adminCreateInvite">生成一次性邀请码</button><button class="ghost-btn" type="button" id="adminClose">关闭</button></div>
     <div id="adminCodeArea" class="hidden"><input id="adminCode" class="admin-code" readonly aria-label="新邀请码"><button class="ghost-btn" type="button" id="adminCopyCode">复制</button><p>邀请码只显示在这里一次，请立即保存。</p></div>
+    <form id="adminPasswordForm" class="admin-password"><strong>修改账号密码</strong><label>选择账号<select id="adminPasswordUser" required></select></label><label>新密码<input id="adminNewPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="至少 8 位"></label><label>确认新密码<input id="adminConfirmPassword" type="password" minlength="8" autocomplete="new-password" required placeholder="再次输入新密码"></label><button class="primary-btn" id="adminPasswordSubmit" type="submit">修改密码</button></form>
     <p id="adminMessage" class="admin-message" role="status"></p>
     <div id="adminList" class="admin-list"></div>
   </div>
@@ -797,7 +799,7 @@ body:not(.cloud-ready) .app{visibility:hidden}
         </div>
       </div>
 
-      <div class="cloud-strip"><span id="cloudStatus">正在连接云端…</span><span><button id="adminOpen" class="hidden" type="button">管理员</button><button id="cloudRefreshBtn" type="button">读取云端</button><button id="cloudLogoutBtn" type="button">退出登录</button></span></div>
+      <div class="cloud-strip"><span><span id="cloudStatus">正在连接云端…</span> · v1.1</span><span><button id="adminOpen" class="hidden" type="button">管理员</button><button id="cloudRefreshBtn" type="button">读取云端</button><button id="cloudLogoutBtn" type="button">退出登录</button></span></div>
       <div class="ddl-pulse" aria-label="截止日期概览">
         <div class="pulse-card"><span>已逾期</span><strong id="pulseOverdue">0</strong></div>
         <div class="pulse-card"><span>未来 7 天</span><strong id="pulseSoon">0</strong></div>
@@ -3028,6 +3030,6 @@ exportTableBtn.onclick=exportScheduleTable;
 renderAll();
 (async()=>{await migrateLegacyBackground();await loadBackgroundAsset();applyAppearance()})();
 </script>
-<script src="cloud.js"></script>
+<script src="cloud.js?v=1.1"></script>
 </body>
 </html>
