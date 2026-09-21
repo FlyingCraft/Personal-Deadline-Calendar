@@ -28,8 +28,8 @@ Deno.serve(async req => {
   if (!check.ok) return reply({ error: '暂时无法验证邀请码' }, 503);
   const rows = await check.json();
   if (!rows.length || rows[0].uses >= rows[0].max_uses) return reply({ error: '邀请码无效或已达到使用上限' }, 403);
-  if ((username.toLowerCase() === 'flying_craft') !== (rows[0].kind === 'admin'))
-    return reply({ error: '该用户名需要专属邀请码；管理员邀请码仅供 Flying_Craft 使用' }, 403);
+  if ((username.toLowerCase() === 're_chan') !== (rows[0].kind === 'admin'))
+    return reply({ error: '该用户名需要专属邀请码；管理员邀请码仅供 Re_Chan 使用' }, 403);
   if (body.action !== 'register') return reply({ error: 'Unsupported action' }, 400);
   const password = String(body.password || '');
   if (password.length < 8 || password.length > 72)
