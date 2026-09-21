@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>日子 · 个人 DDL 日历 v1.2</title>
+<title>日子 · 个人 DDL 日历 v1.3</title>
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A//www.w3.org/2000/svg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2216%22%20fill%3D%22%23234a78%22/%3E%3Ctext%20x%3D%2232%22%20y%3D%2244%22%20text-anchor%3D%22middle%22%20font-size%3D%2238%22%20font-family%3D%22serif%22%20font-weight%3D%22700%22%20fill%3D%22white%22%3E%E6%97%A5%3C/text%3E%3C/svg%3E">
 
 <style>
@@ -684,7 +684,7 @@ body:not(.cloud-ready) .app{visibility:hidden}
 <body>
 <div class="auth-gate" id="authGate">
   <div class="auth-card">
-    <div class="auth-brand"><div class="auth-mark">日</div><strong>日子</strong><span class="version-tag">v1.2</span></div>
+    <div class="auth-brand"><div class="auth-mark">日</div><strong>日子</strong><span class="version-tag">v1.3</span></div>
     <p class="auth-hint">登录后可在不同设备查看和编辑同一份个人日历。新账号需要邀请码。</p>
     <div class="auth-tabs"><button type="button" class="active" data-auth-tab="login">登录</button><button type="button" data-auth-tab="register">注册</button></div>
     <form id="authForm" class="auth-fields">
@@ -799,7 +799,7 @@ body:not(.cloud-ready) .app{visibility:hidden}
         </div>
       </div>
 
-      <div class="cloud-strip"><span><span id="cloudStatus">正在连接云端…</span> · v1.2</span><span><button id="adminOpen" class="hidden" type="button">管理员</button><button id="cloudRefreshBtn" type="button">读取云端</button><button id="cloudLogoutBtn" type="button">退出登录</button></span></div>
+      <div class="cloud-strip"><span><span id="cloudStatus">正在连接云端…</span> · v1.3</span><span><button id="adminOpen" class="hidden" type="button">管理员</button><button id="cloudRefreshBtn" type="button">读取云端</button><button id="cloudLogoutBtn" type="button">退出登录</button></span></div>
       <div class="ddl-pulse" aria-label="截止日期概览">
         <div class="pulse-card"><span>已逾期</span><strong id="pulseOverdue">0</strong></div>
         <div class="pulse-card"><span>未来 7 天</span><strong id="pulseSoon">0</strong></div>
@@ -3030,6 +3030,6 @@ exportTableBtn.onclick=exportScheduleTable;
 renderAll();
 (async()=>{await migrateLegacyBackground();await loadBackgroundAsset();applyAppearance()})();
 </script>
-<script src="cloud.js?v=1.2"></script>
+<script src="cloud.js?v=1.3"></script>
 </body>
 </html>
