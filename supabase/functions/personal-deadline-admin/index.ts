@@ -29,13 +29,7 @@ Deno.serve(async req => {
   if (body.action === 'list') {
     const membersResponse = await fetch(`${url}/rest/v1/personal_deadline_members?select=user_id,username,is_admin,joined_at&order=joined_at.asc`, { headers: svc });
     if (!membersResponse.ok) return reply({ error: '无法读取账号列表' }, 503);
-    const members = await membersResponse.json();
-    const list = await Promise.all(members.map(async (member: { user_id: string }) => {
-      const response = await fetch(`${url}/auth/v1/admin/users/${member.user_id}`, { headers: svc });
-      const account = response.ok ? await response.json() : {};
-      return { ...member, email: account.email || '' };
-    }));
-    return reply({ members: list });
+    return reply({ members: await membersResponse.json() });
   }
   if (body.action === 'create_invite') {
     const random = crypto.getRandomValues(new Uint8Array(32));
