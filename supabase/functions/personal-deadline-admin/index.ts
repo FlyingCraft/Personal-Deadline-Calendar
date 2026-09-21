@@ -24,7 +24,7 @@ Deno.serve(async req => {
   const user = await userResponse.json();
   const memberResponse = await fetch(`${url}/rest/v1/personal_deadline_members?user_id=eq.${user.id}&is_admin=eq.true&select=user_id`, { headers: svc });
   if (!memberResponse.ok || !(await memberResponse.json()).length) return reply({ error: '没有管理员权限' }, 403);
-  let body: { action?: string; userId?: string };
+  let body: { action?: string; userId?: string; password?: string };
   try { body = await req.json(); } catch { return reply({ error: '无效请求' }, 400); }
   if (body.action === 'list') {
     const membersResponse = await fetch(`${url}/rest/v1/personal_deadline_members?select=user_id,username,is_admin,joined_at&order=joined_at.asc`, { headers: svc });
@@ -41,6 +41,20 @@ Deno.serve(async req => {
     });
     if (!response.ok) return reply({ error: '邀请码生成失败' }, 503);
     return reply({ code });
+  }
+  if (body.action === 'change_password') {
+    const id = String(body.userId || '');
+    const password = body.password;
+    if (!/^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(id)) return reply({ error: '账号 ID 无效' }, 400);
+    if (typeof password !== 'string' || password.length < 8 || password.length > 72) return reply({ error: '密码须为 8 至 72 位' }, 400);
+    const targetResponse = await fetch(`${url}/rest/v1/personal_deadline_members?user_id=eq.${id}&select=user_id`, { headers: svc });
+    if (!targetResponse.ok) return reply({ error: '无法核实目标账号' }, 503);
+    if (!(await targetResponse.json()).length) return reply({ error: '该账号不属于日子' }, 404);
+    const response = await fetch(`${url}/auth/v1/admin/users/${id}`, {
+      method: 'PUT', headers: svc, body: JSON.stringify({ password }),
+    });
+    if (!response.ok) return reply({ error: '修改密码失败' }, 503);
+    return reply({ ok: true });
   }
   if (body.action === 'remove_member') {
     const id = String(body.userId || '');
