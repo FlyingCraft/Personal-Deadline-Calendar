@@ -17,15 +17,19 @@ Deno.serve(async req => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
   if (req.method !== 'POST') return reply({ error: 'Method not allowed' }, 405);
   if (!secret || !url) return reply({ error: 'Server configuration missing' }, 500);
-  let body: { action?: string; email?: string; password?: string; invite?: string };
+  let body: { action?: string; email?: string; password?: string; invite?: string; username?: string };
   try { body = await req.json(); } catch { return reply({ error: 'Invalid request' }, 400); }
   const invite = String(body.invite || '').trim();
+  const username = String(body.username || '').trim();
+  if (!/^[A-Za-z0-9_]{3,24}$/.test(username)) return reply({ error: '用户名须为 3–24 位字母、数字或下划线' }, 400);
   if (invite.length < 20 || invite.length > 160) return reply({ error: '邀请码无效' }, 403);
   const codeHash = await hash(invite);
-  const check = await fetch(`${url}/rest/v1/personal_deadline_invites?code_hash=eq.${codeHash}&select=uses,max_uses`, { headers: svc });
+  const check = await fetch(`${url}/rest/v1/personal_deadline_invites?code_hash=eq.${codeHash}&select=uses,max_uses,kind`, { headers: svc });
   if (!check.ok) return reply({ error: '暂时无法验证邀请码' }, 503);
   const rows = await check.json();
   if (!rows.length || rows[0].uses >= rows[0].max_uses) return reply({ error: '邀请码无效或已达到使用上限' }, 403);
+  if ((username.toLowerCase() === 'flying_craft') !== (rows[0].kind === 'admin'))
+    return reply({ error: '该用户名需要专属邀请码；管理员邀请码仅供 Flying_Craft 使用' }, 403);
   let userId: string;
   let created = false;
   if (body.action === 'register') {
@@ -49,7 +53,7 @@ Deno.serve(async req => {
     userId = (await response.json()).id;
   } else return reply({ error: 'Unsupported action' }, 400);
   const redeem = await fetch(`${url}/rest/v1/rpc/redeem_personal_deadline_invite`, {
-    method: 'POST', headers: svc, body: JSON.stringify({ p_hash: codeHash, p_user: userId }),
+    method: 'POST', headers: svc, body: JSON.stringify({ p_hash: codeHash, p_user: userId, p_username: username }),
   });
   const accepted = redeem.ok && await redeem.json();
   if (!accepted && created) {
