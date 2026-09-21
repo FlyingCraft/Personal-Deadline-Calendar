@@ -35,7 +35,9 @@ Deno.serve(async req => {
   if (password.length < 8 || password.length > 72)
     return reply({ error: '密码须为 8–72 位' }, 400);
   // Auth internally requires an email identifier; this is never asked of the user or used for mail.
-  const email = `${username.toLowerCase()}@personal-deadline.local`;
+  const hex = [...new TextEncoder().encode(username.toLowerCase())]
+    .map(byte => byte.toString(16).padStart(2, '0')).join('');
+  const email = `u${hex}@accounts.example.com`;
   const response = await fetch(`${url}/auth/v1/admin/users`, {
     method: 'POST', headers: svc,
     body: JSON.stringify({ email, password, email_confirm: true }),
