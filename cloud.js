@@ -48,24 +48,26 @@ function pdSetMode(mode) {
   pdMode = mode;
   document.querySelectorAll('[data-auth-tab]').forEach(b => b.classList.toggle('active', b.dataset.authTab === mode));
   document.getElementById('authConfirmField').classList.toggle('hidden', mode !== 'register');
+  document.getElementById('authUsernameField').classList.toggle('hidden', mode !== 'register');
   document.getElementById('authInviteField').classList.toggle('hidden', mode !== 'register');
   document.getElementById('authConfirm').required = mode === 'register';
+  document.getElementById('authUsername').required = mode === 'register';
   document.getElementById('authInvite').required = mode === 'register';
   document.getElementById('authPassword').autocomplete = mode === 'register' ? 'new-password' : 'current-password';
   document.getElementById('authSubmit').textContent = mode === 'register' ? '使用邀请码注册' : '登录';
   pdMessage('');
 }
 document.querySelectorAll('[data-auth-tab]').forEach(b => b.onclick = () => pdSetMode(b.dataset.authTab));
-async function pdRegister(email, password, invite) {
+async function pdRegister(email, password, invite, username) {
   const response = await fetch(PD_URL + '/functions/v1/personal-deadline-register', {
-    method: 'POST', headers: pdHeaders(null), body: JSON.stringify({ action: 'register', email, password, invite }),
+    method: 'POST', headers: pdHeaders(null), body: JSON.stringify({ action: 'register', email, password, invite, username }),
   });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || '注册失败');
 }
-async function pdJoin(invite) {
+async function pdJoin(invite, username) {
   const response = await fetch(PD_URL + '/functions/v1/personal-deadline-register', {
-    method: 'POST', headers: pdHeaders(), body: JSON.stringify({ action: 'join', invite }),
+    method: 'POST', headers: pdHeaders(), body: JSON.stringify({ action: 'join', invite, username }),
   });
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || '加入失败');
@@ -86,15 +88,15 @@ document.getElementById('authForm').onsubmit = async e => {
   try {
     if (pdMode === 'register') {
       if (password !== document.getElementById('authConfirm').value) throw new Error('两次密码不一致');
-      await pdRegister(email, password, document.getElementById('authInvite').value.trim());
+      await pdRegister(email, password, document.getElementById('authInvite').value.trim(), document.getElementById('authUsername').value.trim());
     }
     await pdSignIn(email, password);
   } catch (error) { pdMessage(error.message || '操作失败'); }
   finally { button.disabled = false; }
 };
 async function pdMemberCheck() {
-  const list = await pdAuthRequest(`/rest/v1/personal_deadline_members?user_id=eq.${encodeURIComponent(pdUser.id)}&select=user_id`);
-  return list.length > 0;
+  const list = await pdAuthRequest(`/rest/v1/personal_deadline_members?user_id=eq.${encodeURIComponent(pdUser.id)}&select=user_id,username,is_admin`);
+  return list[0] || null;
 }
 async function pdBackgroundData() {
   const blob = await assetGet(BG_ASSET_KEY).catch(() => null);
@@ -209,13 +211,18 @@ async function pdLoadOnLogin() {
 async function pdOpenCalendar() {
   await pdEnsureSession();
   pdUser = await pdAuthRequest('/auth/v1/user');
-  if (!await pdMemberCheck()) {
+  let membership = await pdMemberCheck();
+  if (!membership) {
     const invite = prompt('该账号尚未加入“日子”。请输入邀请码：');
     if (!invite) throw new Error('需要邀请码才能使用此日历');
-    await pdJoin(invite.trim());
-    if (!await pdMemberCheck()) throw new Error('加入失败，请重试');
+    const username = prompt('设置你的日子用户名（3–24 位字母、数字或下划线）：');
+    if (!username) throw new Error('需要用户名才能加入');
+    await pdJoin(invite.trim(), username.trim());
+    membership = await pdMemberCheck();
+    if (!membership) throw new Error('加入失败，请重试');
   }
   await pdLoadOnLogin();
+  document.getElementById('adminOpen').classList.toggle('hidden', !membership.is_admin);
   document.body.classList.add('cloud-ready');
   gate.classList.add('hidden');
 }
@@ -244,6 +251,72 @@ document.getElementById('cloudLogoutBtn').onclick = async () => {
   await assetDelete(BG_ASSET_KEY).catch(() => {});
   if (token) fetch(PD_URL + '/auth/v1/logout', { method: 'POST', headers: pdHeaders(token) }).catch(() => {});
   location.reload();
+};
+const pdAdminGate = document.getElementById('adminGate');
+const pdAdminMessage = document.getElementById('adminMessage');
+async function pdAdmin(action, fields = {}) {
+  return await pdAuthRequest('/functions/v1/personal-deadline-admin', {
+    method: 'POST', body: JSON.stringify({ action, ...fields }),
+  });
+}
+async function pdAdminList() {
+  const list = document.getElementById('adminList');
+  list.textContent = '正在读取账号…';
+  try {
+    const data = await pdAdmin('list');
+    list.replaceChildren();
+    for (const member of data.members) {
+      const row = document.createElement('div');
+      row.className = 'admin-person';
+      const info = document.createElement('div');
+      const title = document.createElement('strong');
+      title.textContent = member.username || '未设置用户名';
+      const detail = document.createElement('small');
+      detail.textContent = member.email || member.user_id;
+      info.append(title, detail);
+      row.append(info);
+      if (!member.is_admin) {
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'ghost-btn';
+        remove.textContent = '移除账号';
+        remove.onclick = async () => {
+          if (!confirm(`移除“${member.username}”在日子中的账号和日历数据？此操作不能撤销。`)) return;
+          remove.disabled = true;
+          try { await pdAdmin('remove_member', { userId: member.user_id }); pdAdminMessage.textContent = '账号已移除'; await pdAdminList(); }
+          catch (error) { pdAdminMessage.textContent = error.message; remove.disabled = false; }
+        };
+        row.append(remove);
+      }
+      list.append(row);
+    }
+  } catch (error) { list.textContent = '读取失败：' + error.message; }
+}
+document.getElementById('adminOpen').onclick = () => {
+  pdAdminGate.classList.remove('hidden');
+  document.getElementById('adminCodeArea').classList.add('hidden');
+  pdAdminMessage.textContent = '';
+  pdAdminList();
+};
+document.getElementById('adminClose').onclick = () => {
+  pdAdminGate.classList.add('hidden');
+  document.getElementById('adminCode').value = '';
+};
+document.getElementById('adminCreateInvite').onclick = async () => {
+  const button = document.getElementById('adminCreateInvite');
+  button.disabled = true;
+  try {
+    const data = await pdAdmin('create_invite');
+    document.getElementById('adminCode').value = data.code;
+    document.getElementById('adminCodeArea').classList.remove('hidden');
+    pdAdminMessage.textContent = '一次性邀请码已生成';
+  } catch (error) { pdAdminMessage.textContent = error.message; }
+  finally { button.disabled = false; }
+};
+document.getElementById('adminCopyCode').onclick = async () => {
+  const code = document.getElementById('adminCode');
+  try { await navigator.clipboard.writeText(code.value); pdAdminMessage.textContent = '邀请码已复制'; }
+  catch { code.select(); document.execCommand('copy'); pdAdminMessage.textContent = '邀请码已复制'; }
 };
 (async () => {
   try {
