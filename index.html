@@ -687,8 +687,7 @@ body:not(.cloud-ready) .app{visibility:hidden}
     <p class="auth-hint">登录后可在不同设备查看和编辑同一份个人日历。新账号需要邀请码。</p>
     <div class="auth-tabs"><button type="button" class="active" data-auth-tab="login">登录</button><button type="button" data-auth-tab="register">注册</button></div>
     <form id="authForm" class="auth-fields">
-      <label>邮箱<input id="authEmail" type="email" autocomplete="email" required placeholder="你的邮箱"></label>
-      <label id="authUsernameField" class="hidden">用户名<input id="authUsername" maxlength="24" autocomplete="username" placeholder="3–24 位字母、数字或下划线"></label>
+      <label>用户名<input id="authUsername" maxlength="24" autocomplete="username" required placeholder="3–24 位字母、数字或下划线"></label>
       <label>密码<input id="authPassword" type="password" minlength="8" autocomplete="current-password" required placeholder="至少 8 位"></label>
       <label id="authConfirmField" class="hidden">确认密码<input id="authConfirm" type="password" autocomplete="new-password" placeholder="再次输入密码"></label>
       <label id="authInviteField" class="hidden">邀请码<input id="authInvite" autocomplete="off" placeholder="仅注册或加入账号时需要"></label>
